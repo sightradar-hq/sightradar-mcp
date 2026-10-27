@@ -1,0 +1,67 @@
+{
+  "name": "sightradar-mcp",
+  "version": "0.1.0",
+  "description": "Official MCP server for the SightRadar face recognition API: index photos, search faces, register selfies, run batches, manage webhooks and billing from Claude, ChatGPT, Cursor and any MCP client",
+  "mcpName": "io.github.sightradar-hq/sightradar-mcp",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "sightradar-mcp": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "server.json"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/cli.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest --run",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model context protocol",
+    "mcp server",
+    "face recognition",
+    "face search",
+    "face detection",
+    "selfie search",
+    "sightradar",
+    "claude",
+    "chatgpt",
+    "cursor",
+    "aws rekognition alternative"
+  ],
+  "license": "MIT",
+  "author": "SightRadar",
+  "homepage": "https://sightradar.com/docs/mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sightradar-hq/sightradar-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sightradar-hq/sightradar-mcp/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.4.0",
+    "@types/node": "22.10.5",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}
