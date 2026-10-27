@@ -1,0 +1,44 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.sightradar-hq/sightradar-mcp",
+  "title": "SightRadar",
+  "description": "Face recognition: index photos, find a person's photos from a selfie, batches, webhooks, billing.",
+  "websiteUrl": "https://sightradar.com",
+  "repository": {
+    "url": "https://github.com/sightradar-hq/sightradar-mcp",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "sightradar-mcp",
+      "version": "0.1.0",
+      "transport": { "type": "stdio" },
+      "environmentVariables": [
+        {
+          "name": "SIGHTRADAR_API_KEY",
+          "description": "SightRadar API key (frs_...). Create one at https://sightradar.com/dashboard/keys",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "SIGHTRADAR_SCOPES",
+          "description": "Tool groups to expose: read, search, write, delete, account, all. Default read,search,write,delete.",
+          "isRequired": false
+        },
+        {
+          "name": "SIGHTRADAR_FILE_ROOTS",
+          "description": "Folders file_path may read. Default: home directory; 'none' disables.",
+          "isRequired": false
+        }
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.sightradar.com/mcp"
+    }
+  ]
+}

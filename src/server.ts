@@ -56,7 +56,7 @@ export function createSightRadarServer(opts: CreateServerOptions): McpServer {
       title: "SightRadar",
       version: VERSION,
       websiteUrl: "https://sightradar.com",
-      icons: [{ src: "https://sightradar.com/icon.svg", mimeType: "image/svg+xml" }],
+      icons: [{ src: "https://sightradar.com/favicon.ico", mimeType: "image/x-icon" }],
     },
     {
       capabilities: { tools: { listChanged: false } },
