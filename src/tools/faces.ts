@@ -117,10 +117,10 @@ export const faceTools = [
     scope: "search",
     title: "Search by a stored face",
     description:
-      "Search a collection using a face that is already stored (its point_id from index_photo or register_selfie), without sending an image again. Cheaper than search_faces. Returns matches [{photo_id, score}]; reason=point_not_found if the id is unknown. Costs 62 credits.",
+      "Find a registered person's photos again without re-sending their selfie: pass the point_id returned by register_selfie for this collection. Cheaper than search_faces. Only selfie point ids work here; face point ids from index_photo return reason=point_not_found. Returns matches [{photo_id, score}]. Costs 62 credits.",
     input: () => ({
       collection_id: collectionId,
-      point_id: z.string().min(1).describe("point_id of a stored face or selfie."),
+      point_id: z.string().min(1).describe("point_id from register_selfie."),
       threshold,
       limit,
       idempotency_key: idempotencyKey,
