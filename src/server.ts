@@ -4,6 +4,7 @@ import { SightRadarApiError, type SightRadarApi, type ApiResponse } from "./clie
 import { ImageInputError, type ImageCapabilities } from "./images.js";
 import { ALL_SCOPES, SCOPES, type Scope } from "./scopes.js";
 import { TOOLS, type ToolDef, type HandlerResult } from "./tools/index.js";
+import { PROMPTS, type PromptDef } from "./prompts.js";
 import { VERSION } from "./version.js";
 
 export const SERVER_NAME = "sightradar";
@@ -23,6 +24,8 @@ export interface CreateServerOptions {
   onToolCall?: (event: ToolCallEvent) => void;
   /** Override the tool list (tests, forks). */
   tools?: ToolDef[];
+  /** Override the prompt list (tests, forks). */
+  prompts?: PromptDef[];
 }
 
 export interface ToolCallEvent {
@@ -48,6 +51,7 @@ export function createSightRadarServer(opts: CreateServerOptions): McpServer {
   const allowed = new Set<Scope>(opts.scopes ?? ALL_SCOPES);
   const images: ImageCapabilities = { ...DEFAULT_IMAGE_CAPS, ...opts.images };
   const tools = (opts.tools ?? TOOLS).filter((t) => allowed.has(t.scope));
+  const prompts = (opts.prompts ?? PROMPTS).filter((p) => p.scopes.every((s) => allowed.has(s)));
 
   const scopeLine = `This connection may use: ${[...allowed].map((s) => `${s} (${SCOPES[s]})`).join("; ")}.`;
   const server = new McpServer(
@@ -59,7 +63,10 @@ export function createSightRadarServer(opts: CreateServerOptions): McpServer {
       icons: [{ src: "https://sightradar.com/favicon.ico", mimeType: "image/x-icon" }],
     },
     {
-      capabilities: { tools: { listChanged: false } },
+      capabilities: {
+        tools: { listChanged: false },
+        ...(prompts.length ? { prompts: { listChanged: false } } : {}),
+      },
       instructions: [BASE_INSTRUCTIONS, scopeLine, opts.instructions].filter(Boolean).join("\n\n"),
     },
   );
@@ -101,6 +108,21 @@ export function createSightRadarServer(opts: CreateServerOptions): McpServer {
           return result as never;
         }
       },
+    );
+  }
+  for (const prompt of prompts) {
+    server.registerPrompt(
+      prompt.name,
+      { title: prompt.title, description: prompt.description, argsSchema: z.object(prompt.args) },
+      (args: unknown) => ({
+        description: prompt.description,
+        messages: [
+          {
+            role: "user" as const,
+            content: { type: "text" as const, text: prompt.text(args as Record<string, string | undefined>) },
+          },
+        ],
+      }),
     );
   }
   return server;

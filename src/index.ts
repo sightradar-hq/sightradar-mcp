@@ -6,6 +6,8 @@ export type { SightRadarApiOptions, ApiResponse, RequestOptions } from "./client
 export { SCOPES, ALL_SCOPES, DEFAULT_SCOPES, parseScopes, isScope } from "./scopes.js";
 export type { Scope } from "./scopes.js";
 export { TOOLS } from "./tools/index.js";
+export { PROMPTS } from "./prompts.js";
+export type { PromptDef } from "./prompts.js";
 export type { ToolDef, ToolContext, ToolAnnotations } from "./tools/index.js";
 export type { ImageCapabilities } from "./images.js";
 export { VERSION } from "./version.js";
