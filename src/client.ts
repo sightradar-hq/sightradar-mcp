@@ -224,12 +224,24 @@ function describeError(status: number, data: unknown): { code?: string; message:
       (typeof d.message === "string" && d.message) ||
       (typeof d.detail === "string" && d.detail) ||
       `HTTP ${status}`;
-    return { code: code || undefined, message };
+    return { code: code || inferCode(status, message), message };
   }
   if (typeof data === "string" && data.trim()) {
     return { message: data.trim().slice(0, 500) };
   }
   return { message: `HTTP ${status}` };
+}
+
+/**
+ * Some gateway answers (the 429 rate and concurrency limits, 413) carry only a
+ * message. Give them the same stable codes as the structured errors.
+ */
+function inferCode(status: number, message: string): string | undefined {
+  const m = message.toLowerCase();
+  if (status === 429 && m.includes("concurrency")) return "concurrency_limit_exceeded";
+  if (status === 429) return "rate_limit_exceeded";
+  if (status === 413) return "image_too_large";
+  return undefined;
 }
 
 /** Percent-encode one path segment (collection ids may be arbitrary UTF-8). */

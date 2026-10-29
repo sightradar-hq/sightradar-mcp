@@ -10,7 +10,7 @@ export const batchTools = [
     scope: "write",
     title: "Submit a batch job",
     description:
-      "Queue up to 1000 photo URLs for background processing. op=index stores their faces in the collection; op=match matches them against the collection. Submitting is free; each photo costs 62 credits when it is processed. Returns batch_id; poll get_batch or register a webhook to hear when it finishes. URLs are not checked at submit time: unreachable ones fail individually later.",
+      "Queue up to 1000 photo URLs for background processing. op=index stores their faces in the collection; op=match matches them against the collection. Submitting is free; each photo costs 62 credits when it is processed (some accounts pay the real-time 93 for a batch of one photo). The collection is created if missing; one that is being deleted is refused with 409 collection_not_writable. Only URLs are accepted, not base64. Returns batch_id; poll get_batch or register a webhook to hear when it finishes. URLs are not checked at submit time: unreachable ones fail individually later.",
     input: () => ({
       collection_id: z.string().min(1).max(255).describe("Collection to index into or match against."),
       op: z.enum(["index", "match"]).describe("index = store faces; match = search with each photo."),
@@ -30,7 +30,7 @@ export const batchTools = [
         .string()
         .max(255)
         .optional()
-        .describe("Reusing a key returns the original batch instead of creating a duplicate."),
+        .describe("Reusing a key returns the original batch instead of creating a duplicate. Use a new key for each different batch."),
     }),
     annotations: WRITE,
     billable: true,
@@ -104,7 +104,7 @@ export const batchTools = [
     scope: "write",
     title: "Retry failed batch photos",
     description:
-      "Retry batch photos that failed for a given reason, in two steps. First call with execute=false to get a preview: how many photos match, the estimated credit cost and a preview_id (valid 10 minutes, usable once). Show that to the user, then call again with execute=true and the preview_id. Requeued photos cost 62 credits each when processed.",
+      "Retry batch photos that failed for a given reason, in two steps. First call with execute=false to get a preview: how many photos match, the estimated credit cost and a preview_id (valid 10 minutes, usable once). Show that to the user, then call again with execute=true and the preview_id. Requeued photos are charged when processed, usually 62 credits each; the preview's credits_per_photo and estimated_credits give the exact price.",
     input: () => ({
       execute: z.boolean().describe("false = preview only; true = run a preview (needs preview_id)."),
       preview_id: z.string().optional().describe("From the preview step; required when execute=true."),

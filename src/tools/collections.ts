@@ -18,9 +18,9 @@ export const collectionTools = [
     input: () => ({
       query: z.string().max(100).optional().describe("Only collections whose id contains this text."),
       status: z
-        .string()
+        .enum(["active", "deletion_pending", "deleting", "deleted"])
         .optional()
-        .describe("Filter by status, e.g. active, deletion_pending, deleting, deleted. Omit for the default view."),
+        .describe("Filter by status. Omit for everything except fully deleted collections."),
       limit: z.number().int().min(1).max(200).optional().describe("Page size (default 50, max 200)."),
       offset: z.number().int().min(0).optional().describe("Rows to skip, for paging."),
     }),
@@ -51,7 +51,7 @@ export const collectionTools = [
     scope: "write",
     title: "Create a collection",
     description:
-      "Create a face collection (for example one per event). Creating one that already exists and is active succeeds without change. Indexing into a missing collection also creates it, so this is optional. Free.",
+      "Create a face collection (for example one per event). Creating one that already exists and is active succeeds without change; one that is being deleted or was deleted returns 409 (use restore_collection or recreate_collection). Indexing into a missing collection also creates it, so this is optional. Free.",
     input: () => ({ collection_id: collectionId }),
     annotations: IDEMPOTENT_WRITE,
     handler: (a, { api }) => api.post("/v1/collections", { json: { collection_id: a.collection_id } }),
@@ -71,7 +71,7 @@ export const collectionTools = [
         .boolean()
         .optional()
         .describe(
-          "Set true once the user has confirmed they want to erase a collection that still holds faces. Required by accounts with deletion confirmation enabled.",
+          "Set true once the user has confirmed they want to erase a collection that still holds faces. When the API answers 409 confirmation_required, ask the user and retry with this.",
         ),
     }),
     annotations: DESTRUCTIVE,

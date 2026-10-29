@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { seg, type SightRadarApi } from "../client.js";
 import { imageSchemaShape, loadImage, toForm, ImageInputError, type ImageArgs, type ImageCapabilities } from "../images.js";
-import { defineTool, COMPUTE, WRITE } from "./define.js";
+import { defineTool, dropUndefined, COMPUTE, WRITE } from "./define.js";
 
 // Billable face operations. Prices are in credits; 100,000 credits = US$1.
 
@@ -12,7 +12,7 @@ const idempotencyKey = z
   .max(255)
   .optional()
   .describe(
-    "Optional. Reusing the same key for a retry of the same request returns the original result instead of charging again.",
+    "Optional. A retry that reuses the key is never charged twice: if the first call finished, the retry gets 409 duplicate_request_already_processed; if it is still running, 409 duplicate_request_in_flight. Use a new key for each different request.",
   );
 
 const threshold = z
@@ -43,10 +43,6 @@ async function postImage(
     return api.post(path, { form: toForm(img.upload, fields), idempotencyKey: idem });
   }
   return api.post(path, { json: { ...img?.json, ...dropUndefined(fields) }, idempotencyKey: idem });
-}
-
-function dropUndefined(o: Record<string, unknown>) {
-  return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
 }
 
 export const faceTools = [
@@ -117,7 +113,7 @@ export const faceTools = [
     scope: "search",
     title: "Search by a stored face",
     description:
-      "Find a registered person's photos again without re-sending their selfie: pass the point_id returned by register_selfie for this collection. Cheaper than search_faces. Only selfie point ids work here; face point ids from index_photo return reason=point_not_found. Returns matches [{photo_id, score}]. Costs 62 credits.",
+      "Find a registered person's photos again without re-sending their selfie: pass the point_id returned by register_selfie for this collection. Cheaper than search_faces. Only selfie point ids (a UUID or an unsigned integer) work here; face point ids from index_photo return reason=point_not_found. Returns matches [{photo_id, score}]. Costs 62 credits.",
     input: () => ({
       collection_id: collectionId,
       point_id: z.string().min(1).describe("point_id from register_selfie."),
@@ -139,7 +135,7 @@ export const faceTools = [
     scope: "write",
     title: "Register a selfie",
     description:
-      "Store a user's selfie in a collection so they can be matched against its photos. Returns face_found, the selfie's point_id (use with search_by_point_id) and its 512-number embedding. face_found=false with a reason means no usable face. Costs 93 credits.",
+      "Store a user's selfie in a collection so they can be matched against its photos. Returns face_found, the selfie's point_id (use with search_by_point_id) and its 512-number embedding. face_found=false with reason=no_face means no face was found; a face that fails the quality gate (det_score < 0.6 or under 24 px) is refused with HTTP 422 and not stored. Retrying with the same idempotency_key returns the original point_id without a second charge. Costs 93 credits.",
     input: (images) => ({
       collection_id: collectionId,
       user_id: z.string().min(1).max(255).describe("Your id for the person (required)."),
@@ -177,7 +173,7 @@ export const faceTools = [
     scope: "search",
     title: "Compare two faces",
     description:
-      "Check whether two images (or embeddings) show the same person. Uses the best face on each side. Returns face_found, similarity (0-1, null when a side has no face), match and the threshold used. Each side is a public URL, a CDN key or a 512-number embedding. Costs 93 credits per image processed (186 for two images, 93 for one image and one embedding).",
+      "Check whether two images (or embeddings) show the same person. Uses the best face on each side. Returns face_found, similarity (0-1, null when a side has no face), match and the threshold used. Each side is a public URL, a CDN key or a 512-number embedding. Costs 93 credits per image processed: 186 for two images, 93 for one image and one embedding, 93 for two embeddings.",
     input: () => ({
       source_url: z.string().url().optional().describe("Public URL of the first image."),
       source_gcs_key: z.string().optional().describe("CDN key of the first image."),

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { seg } from "../client.js";
-import { defineTool, READ, WRITE, IDEMPOTENT_WRITE, DESTRUCTIVE } from "./define.js";
+import { defineTool, dropUndefined, READ, WRITE, IDEMPOTENT_WRITE, DESTRUCTIVE } from "./define.js";
 
 const dateish = z
   .string()
@@ -13,7 +13,7 @@ export const usageTools = [
     scope: "read",
     title: "Get credit balance",
     description:
-      "Current credit balance of the account. 100,000 credits = US$1. Real-time index, search, selfie, detect = 93 credits; batch photo and search_by_point_id = 62. Free.",
+      "Current credit balance of the account. 100,000 credits = US$1. Real-time index, search, selfie, detect = 93 credits; compare = 93 per image; batch photo and search_by_point_id = 62. Free.",
     input: () => ({}),
     annotations: READ,
     handler: (_a, { api }) => api.get("/v1/wallet"),
@@ -96,17 +96,11 @@ export const accountTools = [
       organization: z.string().max(200).optional(),
     }),
     annotations: IDEMPOTENT_WRITE,
-    handler: async (a, { api }) => {
-      // PUT replaces all three fields, so start from the current values.
-      const cur = (await api.get<Record<string, string>>("/portal/profile")).data ?? {};
-      return api.put("/portal/profile", {
-        json: {
-          first_name: a.first_name ?? cur.first_name ?? "",
-          last_name: a.last_name ?? cur.last_name ?? "",
-          organization: a.organization ?? cur.organization ?? "",
-        },
-      });
-    },
+    // The API keeps any field left out of the body.
+    handler: (a, { api }) =>
+      api.put("/portal/profile", {
+        json: dropUndefined({ first_name: a.first_name, last_name: a.last_name, organization: a.organization }),
+      }),
   }),
 
   defineTool({

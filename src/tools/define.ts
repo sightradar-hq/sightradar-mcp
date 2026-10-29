@@ -69,3 +69,8 @@ export const DESTRUCTIVE: ToolAnnotations = {
   idempotentHint: true,
   openWorldHint: true,
 };
+
+/** Copy of `o` without its undefined values (so JSON bodies omit them). */
+export function dropUndefined<T extends Record<string, unknown>>(o: T): Partial<T> {
+  return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as Partial<T>;
+}

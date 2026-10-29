@@ -190,12 +190,22 @@ describe("calls", () => {
     expect(calls[0]!.json).toEqual({ balance_alert_threshold_credits: null });
   });
 
-  it("update_profile keeps fields that were not given", async () => {
-    const { client, calls } = await connect((req) =>
-      req.method === "GET" ? json({ first_name: "Ada", last_name: "L", organization: "Acme" }) : json({}),
-    );
+  it("update_profile sends only the fields given (the API keeps the rest)", async () => {
+    const { client, calls } = await connect(() => json({}));
     await client.callTool({ name: "update_profile", arguments: { organization: "NewCo" } });
-    expect(calls[1]!.json).toEqual({ first_name: "Ada", last_name: "L", organization: "NewCo" });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.method).toBe("PUT");
+    expect(calls[0]!.json).toEqual({ organization: "NewCo" });
+  });
+
+  it("list_collections only accepts the statuses the API knows", async () => {
+    const { client, calls } = await connect(() => json({ collections: [] }));
+    const bad = await client.callTool({ name: "list_collections", arguments: { status: "archived" } });
+    expect(bad.isError).toBe(true);
+    await client.callTool({ name: "list_collections", arguments: { status: "deletion_pending", query: "wed" } });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.url.searchParams.get("status")).toBe("deletion_pending");
+    expect(calls[0]!.url.searchParams.get("q")).toBe("wed");
   });
 });
 
@@ -221,6 +231,25 @@ describe("errors", () => {
       arguments: { enabled: true, threshold_credits: 1, recharge_credits: 1 },
     });
     expect(JSON.parse(textOf(r))).toMatchObject({ error: "below minimum", min_topup_credits: 500000 });
+  });
+
+  it("gives 429s without an error code a stable code and hint", async () => {
+    const { client } = await connect(() => json({ error: "concurrency limit exceeded" }, 429));
+    const r = await client.callTool({ name: "detect_faces", arguments: { image_url: "https://x.test/a.jpg" } });
+    const body = JSON.parse(textOf(r));
+    expect(body.code).toBe("concurrency_limit_exceeded");
+    expect(body.hint).toMatch(/10 in flight/);
+  });
+
+  it("explains a settled idempotent replay", async () => {
+    const { client } = await connect(() =>
+      json({ error: "duplicate request already processed", error_code: "duplicate_request_already_processed" }, 409),
+    );
+    const r = await client.callTool({
+      name: "index_photo",
+      arguments: { collection_id: "c", image_url: "https://x.test/a.jpg", idempotency_key: "k" },
+    });
+    expect(JSON.parse(textOf(r)).hint).toMatch(/charged once/);
   });
 
   it("explains a confirmation_required delete", async () => {
