@@ -140,6 +140,18 @@ Credits: 100,000 credits = US$1. Every billable tool states its price in its des
 | `get_notification_settings` / `update_notification_settings` / `manage_notification_recipient` | Email alerts and extra recipients |
 | `list_team_members` | Organization members |
 
+### Prompts and resources
+
+Clients that show MCP prompts (Claude's "+" menu, `/` commands) get three ready-made workflows:
+
+| Prompt | What it does |
+|---|---|
+| `find_person_in_event` | Checks the balance, searches a collection with a selfie and lists the matching photos |
+| `index_event_photos` | Picks `index_photo` or `submit_batch` by photo count and states the cost before starting |
+| `account_health` | Balance, recent usage, failed batch photos and failed webhook deliveries |
+
+Resources: `sightradar://docs/pricing-and-limits` (credits per operation, rate limits, image and deletion limits) and `sightradar://collections/{collection_id}` (one collection's counts, needs the `read` scope).
+
 ### Images
 
 Image tools take exactly one of:
@@ -166,6 +178,16 @@ Files and base64 data are checked to be real images before anything is uploaded.
 - Scopes limit what a connection can do. A `read`-only connection cannot spend credits or change data.
 - The local server reads files only inside `SIGHTRADAR_FILE_ROOTS`, after resolving symlinks, and only image files.
 - API errors come back as tool results with the error code, a hint and the request id, never as stack traces.
+
+## Troubleshooting
+
+| You see | Meaning |
+|---|---|
+| `401` / `unauthorized` | The API key was revoked or mistyped. Create a new one at [sightradar.com/dashboard/keys](https://sightradar.com/dashboard/keys); remote connections: reconnect. |
+| `402` / `insufficient_credits` | Top up at [sightradar.com/dashboard/billing](https://sightradar.com/dashboard/billing). |
+| `409` / `duplicate_request_already_processed` | That `idempotency_key` was already used and charged; the earlier call succeeded. |
+| `file_path ... is outside the folders this server may read` | Add the folder to `SIGHTRADAR_FILE_ROOTS` (`:`-separated on macOS/Linux, `;` on Windows). |
+| `429` | Over 50 requests/s per key or 10 in flight per account. Wait and retry. |
 
 ## Development
 
