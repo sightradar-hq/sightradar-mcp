@@ -5,6 +5,7 @@ import { ImageInputError, type ImageCapabilities } from "./images.js";
 import { ALL_SCOPES, SCOPES, type Scope } from "./scopes.js";
 import { TOOLS, type ToolDef, type HandlerResult } from "./tools/index.js";
 import { PROMPTS, type PromptDef } from "./prompts.js";
+import { registerResources } from "./resources.js";
 import { VERSION } from "./version.js";
 
 export const SERVER_NAME = "sightradar";
@@ -66,6 +67,7 @@ export function createSightRadarServer(opts: CreateServerOptions): McpServer {
       capabilities: {
         tools: { listChanged: false },
         ...(prompts.length ? { prompts: { listChanged: false } } : {}),
+        resources: { listChanged: false },
       },
       instructions: [BASE_INSTRUCTIONS, scopeLine, opts.instructions].filter(Boolean).join("\n\n"),
     },
@@ -125,6 +127,7 @@ export function createSightRadarServer(opts: CreateServerOptions): McpServer {
       }),
     );
   }
+  registerResources(server, { api: opts.api, images, read: allowed.has("read") });
   return server;
 }
 
