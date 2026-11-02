@@ -187,7 +187,7 @@ Files and base64 data are checked to be real images before anything is uploaded.
 | `402` / `insufficient_credits` | Top up at [sightradar.com/dashboard/billing](https://sightradar.com/dashboard/billing). |
 | `409` / `duplicate_request_already_processed` | That `idempotency_key` was already used and charged; the earlier call succeeded. |
 | `file_path ... is outside the folders this server may read` | Add the folder to `SIGHTRADAR_FILE_ROOTS` (`:`-separated on macOS/Linux, `;` on Windows). |
-| `429` | Over 50 requests/s per key or 10 in flight per account. Wait and retry. |
+| `429` | Over the per-key request rate (50 per second) or the account's in-flight cap. Wait and retry. |
 
 ## Development
 

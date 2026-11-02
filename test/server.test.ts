@@ -80,8 +80,8 @@ describe("calls", () => {
 
   it("percent-encodes collection ids", async () => {
     const { client, calls } = await connect(() => json({}));
-    await client.callTool({ name: "get_collection", arguments: { collection_id: "wedding/2026 é" } });
-    expect(calls[0]!.url.pathname).toBe("/v1/collections/wedding%2F2026%20%C3%A9");
+    await client.callTool({ name: "get_collection", arguments: { collection_id: "wedding 2026 é?#%" } });
+    expect(calls[0]!.url.pathname).toBe("/v1/collections/wedding%202026%20%C3%A9%3F%23%25");
   });
 
   it("index_photo by URL posts JSON with photoId and the idempotency key", async () => {
@@ -238,7 +238,7 @@ describe("errors", () => {
     const r = await client.callTool({ name: "detect_faces", arguments: { image_url: "https://x.test/a.jpg" } });
     const body = JSON.parse(textOf(r));
     expect(body.code).toBe("concurrency_limit_exceeded");
-    expect(body.hint).toMatch(/10 in flight/);
+    expect(body.hint).toMatch(/Too many requests at once/);
   });
 
   it("explains a settled idempotent replay", async () => {

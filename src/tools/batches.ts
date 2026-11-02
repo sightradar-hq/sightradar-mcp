@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { seg } from "../client.js";
-import { defineTool, READ, WRITE } from "./define.js";
+import { defineTool, pathId, READ, WRITE } from "./define.js";
 
 const batchId = z.string().uuid().describe("Batch id returned by submit_batch.");
 
@@ -10,9 +10,9 @@ export const batchTools = [
     scope: "write",
     title: "Submit a batch job",
     description:
-      "Queue up to 1000 photo URLs for background processing. op=index stores their faces in the collection; op=match matches them against the collection. Submitting is free; each photo costs 62 credits when it is processed (some accounts pay the real-time 93 for a batch of one photo). The collection is created if missing; one that is being deleted is refused with 409 collection_not_writable. Only URLs are accepted, not base64. Returns batch_id; poll get_batch or register a webhook to hear when it finishes. URLs are not checked at submit time: unreachable ones fail individually later.",
+      "Queue up to 1000 photo URLs for background processing. op=index stores their faces in the collection; op=match matches them against the collection. Submitting is free; each photo costs 62 credits when it is processed (some accounts pay the real-time 93 for a batch of one photo). The collection is created if missing; one that is being deleted is refused with 409 collection_not_writable. Only URLs are accepted, not base64. Returns batch_id; poll get_batch or register a webhook to hear when it finishes. op=index results are readable with get_batch_photos. op=match results (the matched photo ids per photo) are delivered only to a webhook today: without webhook_endpoint_id the matches are charged but cannot be read back, so prefer search_faces for a few photos. URLs are not checked at submit time: unreachable ones fail individually later.",
     input: () => ({
-      collection_id: z.string().min(1).max(255).describe("Collection to index into or match against."),
+      collection_id: pathId("collection_id").describe("Collection to index into or match against."),
       op: z.enum(["index", "match"]).describe("index = store faces; match = search with each photo."),
       photos: z
         .array(

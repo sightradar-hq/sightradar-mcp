@@ -117,8 +117,8 @@ export class SightRadarApi {
       }
       throw new SightRadarApiError({
         status: res.status,
-        ...describeError(res.status, data),
-        requestId: res.headers.get("x-request-id") ?? undefined,
+        ...describeError(res.status, data, res.headers.get("content-type") ?? ""),
+        requestId: cleanRequestId(res.headers.get("x-request-id")),
         body: data,
       });
     }
@@ -174,7 +174,7 @@ export class SightRadarApi {
       });
     }
 
-    const requestId = res.headers.get("x-request-id") ?? undefined;
+    const requestId = cleanRequestId(res.headers.get("x-request-id"));
     const credits = res.headers.get("x-credits-remaining");
     const text = await res.text();
     let data: unknown = text;
@@ -192,7 +192,7 @@ export class SightRadarApi {
     if (!res.ok) {
       throw new SightRadarApiError({
         status: res.status,
-        ...describeError(res.status, data),
+        ...describeError(res.status, data, ct),
         requestId,
         retryAfter: res.headers.get("retry-after") ?? undefined,
         body: data,
@@ -208,8 +208,18 @@ export class SightRadarApi {
   }
 }
 
+/**
+ * The gateway and the engine can both set X-Request-Id, which arrives as
+ * "a,a" (or "a, b"). Keep each distinct id once.
+ */
+function cleanRequestId(raw: string | null): string | undefined {
+  if (!raw) return undefined;
+  const ids = [...new Set(raw.split(",").map((s) => s.trim()).filter(Boolean))];
+  return ids.length ? ids.join(",") : undefined;
+}
+
 /** Pull `{code, message}` out of the gateway's (several) error body shapes. */
-function describeError(status: number, data: unknown): { code?: string; message: string } {
+function describeError(status: number, data: unknown, contentType = ""): { code?: string; message: string } {
   if (data && typeof data === "object") {
     const d = data as Record<string, unknown>;
     const detail = d.error_detail as Record<string, unknown> | undefined;
@@ -227,7 +237,14 @@ function describeError(status: number, data: unknown): { code?: string; message:
     return { code: code || inferCode(status, message), message };
   }
   if (typeof data === "string" && data.trim()) {
-    return { message: data.trim().slice(0, 500) };
+    // An HTML page (a proxy or CDN error page in front of the API) is useless
+    // to an assistant: say what happened instead of passing markup through.
+    if (contentType.includes("html") || /^\s*</.test(data)) {
+      return status >= 500 || status === 0
+        ? { code: "upstream_unavailable", message: `SightRadar is temporarily unavailable (HTTP ${status}).` }
+        : { code: inferCode(status, ""), message: `SightRadar refused the request (HTTP ${status}).` };
+    }
+    return { code: inferCode(status, data), message: data.trim().slice(0, 500) };
   }
   return { message: `HTTP ${status}` };
 }

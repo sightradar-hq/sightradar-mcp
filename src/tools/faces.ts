@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { seg, type SightRadarApi } from "../client.js";
 import { imageSchemaShape, loadImage, toForm, ImageInputError, type ImageArgs, type ImageCapabilities } from "../images.js";
-import { defineTool, dropUndefined, COMPUTE, WRITE } from "./define.js";
+import { defineTool, dropUndefined, pathId, COMPUTE, WRITE } from "./define.js";
 
 // Billable face operations. Prices are in credits; 100,000 credits = US$1.
 
-const collectionId = z.string().min(1).max(255).describe("Collection id.");
+const collectionId = pathId("collection_id").describe("Collection id.");
 
 const idempotencyKey = z
   .string()

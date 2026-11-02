@@ -35,8 +35,8 @@ A billable call that fails before the engine answers is refunded. Sending the sa
 ## Rate limits
 
 - 50 requests per second per API key, on the billable operations.
-- 10 billable requests in flight at once per account.
-- Over either limit the API answers HTTP 429 (rate_limit_exceeded or concurrency_limit_exceeded). Wait and retry.
+- An account can also be capped on billable requests in flight at once.
+- Over a limit the API answers HTTP 429 (rate_limit_exceeded or concurrency_limit_exceeded). Wait and retry.
 
 ## Images
 

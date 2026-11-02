@@ -162,7 +162,7 @@ const HINTS: Record<string, string> = {
   no_wallet: "This account has no credit wallet yet. Open https://sightradar.com/dashboard once to set it up.",
   read_only_account: "This account is read-only and cannot change data.",
   rate_limit_exceeded: "Too many requests (50 per second per key). Wait a moment and retry.",
-  concurrency_limit_exceeded: "Too many requests at once (10 in flight per account). Wait for others to finish and retry.",
+  concurrency_limit_exceeded: "Too many requests at once for this account. Wait for others to finish and retry.",
   already_indexed: "This photo_id is already indexed. Use override=true to replace its faces, or a different photo_id.",
   index_in_progress: "This photo is being indexed right now. Retry in a couple of seconds.",
   duplicate_request_already_processed:
@@ -174,6 +174,7 @@ const HINTS: Record<string, string> = {
   confirmation_required:
     "The collection still holds faces. Ask the user to confirm, then retry with confirm_erase=true (or compliance=true for a legal erasure).",
   engine_unavailable: "The recognition engine is briefly unavailable. Retry shortly.",
+  upstream_unavailable: "SightRadar did not answer normally. Retry in a moment; for a billable call, reuse the same idempotency_key so it is not charged twice.",
   engine_timeout: "The recognition engine timed out. Retry shortly.",
   timeout: "The request took too long. It may still complete; check before retrying billable calls (use idempotency_key).",
   FOUNDER_ONLY: "Only the organization founder can do this, on sightradar.com.",

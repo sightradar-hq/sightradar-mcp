@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import { z } from "zod";
 import type { SightRadarApi, ApiResponse } from "../client.js";
 import type { ImageCapabilities } from "../images.js";
 import type { Scope } from "../scopes.js";
@@ -73,4 +73,21 @@ export const DESTRUCTIVE: ToolAnnotations = {
 /** Copy of `o` without its undefined values (so JSON bodies omit them). */
 export function dropUndefined<T extends Record<string, unknown>>(o: T): Partial<T> {
   return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as Partial<T>;
+}
+
+/**
+ * An id that goes into a URL path segment (collection_id, photo_id). The API
+ * refuses "/", "\\", control characters, "." and ".."; checking here gives
+ * the assistant the same clear message instead of a bare router 404 (a path
+ * of ".." is normalised to the parent route before the API sees it).
+ */
+export function pathId(what: string, max = 255) {
+  return z
+    .string()
+    .min(1)
+    .max(max)
+    .refine((v) => v !== "." && v !== "..", { message: `${what} must not be '.' or '..'` })
+    .refine((v) => !/[\/\\]/.test(v), { message: `${what} must not contain '/' or '\\'` })
+    // eslint-disable-next-line no-control-regex
+    .refine((v) => !/[\u0000-\u001f\u007f]/.test(v), { message: `${what} must not contain control characters` });
 }
