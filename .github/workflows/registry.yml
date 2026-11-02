@@ -1,0 +1,62 @@
+name: MCP Registry
+
+# Lists io.github.sightradar-hq/sightradar-mcp on registry.modelcontextprotocol.io.
+# Authenticates with this repository's GitHub OIDC token, so no secret is needed;
+# the org namespace follows from the repo owner. Runs on version tags (after the
+# npm publish) and on demand for an already-published npm version.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  MCP_PUBLISHER_VERSION: v1.8.7
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: server.json version matches package.json
+        run: |
+          pkg="$(node -p 'require("./package.json").version')"
+          srv="$(node -p 'require("./server.json").version')"
+          npmv="$(node -p 'require("./server.json").packages[0].version')"
+          test "$pkg" = "$srv" && test "$pkg" = "$npmv"
+
+      - name: npm package carries the matching mcpName
+        run: |
+          want="$(node -p 'require("./server.json").name')"
+          got="$(npm view "sightradar-mcp@$(node -p 'require("./server.json").version')" mcpName)"
+          test "$want" = "$got"
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Install mcp-publisher (signature verified)
+        run: |
+          set -euo pipefail
+          os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          arch="$(uname -m)"; case "$arch" in x86_64) arch=amd64;; aarch64) arch=arm64;; esac
+          archive="mcp-publisher_${os}_${arch}.tar.gz"
+          base_url="https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}"
+          curl --fail --location --silent --show-error --output "$archive" "$base_url/$archive"
+          curl --fail --location --silent --show-error --output "$archive.sigstore.json" "$base_url/$archive.sigstore.json"
+          cosign verify-blob \
+            --bundle "$archive.sigstore.json" \
+            --certificate-identity "https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "$archive"
+          tar xzf "$archive" mcp-publisher
+          ./mcp-publisher --version
+
+      - name: Authenticate to MCP Registry
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish server to MCP Registry
+        run: ./mcp-publisher publish
