@@ -51,7 +51,7 @@ export const faceTools = [
     scope: "write",
     title: "Index a photo",
     description:
-      "Detect every face in a photo and store them in a collection so they can be found later by search_faces. Returns each face's point_id, bounding box (ratios of image width/height), detection score and pixel size. Faces below the quality gate (det_score < 0.6 or under 24 px) are counted as rejected. Indexing the same photo_id twice fails with already_indexed unless override=true. The collection is created if missing. Costs 93 credits.",
+      "Detect every face in a photo and store them in a collection so they can be found later by search_faces. Returns each face's point_id, bounding box (ratios of image width/height), detection score and pixel size. Faces below the quality gate (det_score < 0.6 or under 24 px) are counted as rejected. Indexing the same photo_id twice fails with already_indexed unless override=true. Use a photo_id that is unique across all your collections: on some older accounts photo ids are shared between collections, so reusing one moves its faces out of the other collection (or is refused with photo_id_in_other_collection). The collection is created if missing. Costs 93 credits.",
     input: (images) => ({
       collection_id: collectionId,
       photo_id: z

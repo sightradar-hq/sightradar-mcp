@@ -18,7 +18,7 @@ export const batchTools = [
         .array(
           z.object({
             url: z.string().url().max(8192).describe("Public http(s) URL of the photo."),
-            external_id: z.string().max(255).optional().describe("Your id for the photo (becomes its photo_id)."),
+            external_id: z.string().max(255).optional().describe("Your id for the photo (becomes its photo_id). Keep it unique within the batch and across your collections."),
           }),
         )
         .min(1)

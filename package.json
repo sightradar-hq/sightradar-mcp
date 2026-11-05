@@ -1,6 +1,6 @@
 {
   "name": "sightradar-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Official MCP server for the SightRadar face recognition API: index photos, search faces, register selfies, run batches, manage webhooks and billing from Claude, ChatGPT, Cursor and any MCP client",
   "mcpName": "io.github.sightradar-hq/sightradar-mcp",
   "type": "module",
