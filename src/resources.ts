@@ -30,12 +30,12 @@ export function pricingAndLimitsMarkdown(images: ImageCapabilities): string {
 
 Some accounts are opted in to paying the real-time 93 credits for a batch of a single photo.
 Everything else (collections, batch status, webhooks, usage, keys, billing settings) is free.
-A billable call that fails before the engine answers is refunded. Sending the same idempotency_key again never charges twice.
+A billable call that fails before the engine answers is refunded. A search_by_point_id with an unknown point id (reason=point_not_found) is not charged. Sending the same idempotency_key again never charges twice.
 
 ## Rate limits
 
 - 50 requests per second per API key, on the billable operations.
-- An account can also be capped on billable requests in flight at once.
+- At most 10 billable requests may be in flight at once per account. Calls do not queue: the next one is refused with HTTP 429 concurrency_limit_exceeded and nothing is charged.
 - Over a limit the API answers HTTP 429 (rate_limit_exceeded or concurrency_limit_exceeded). Wait and retry.
 
 ## Images
@@ -46,6 +46,7 @@ A billable call that fails before the engine answers is refunded. Sending the sa
 - A face is kept only if its detection score is at least 0.6 and its box is at least 24 px on its shorter side. Up to 50 faces are stored per photo, largest first.
 - Two faces match at cosine similarity 0.42 or above unless a threshold is given.
 - A batch holds 1 to 1000 photo URLs. Batches take URLs only, not base64.
+- Each external_id may appear once per batch. A batch that repeats one is refused with HTTP 400 duplicate_external_id before anything is charged.
 
 ## Deletion
 

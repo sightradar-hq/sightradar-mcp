@@ -163,6 +163,7 @@ const HINTS: Record<string, string> = {
   read_only_account: "This account is read-only and cannot change data.",
   rate_limit_exceeded: "Too many requests (50 per second per key). Wait a moment and retry.",
   concurrency_limit_exceeded: "Too many requests at once for this account. Wait for others to finish and retry.",
+  duplicate_external_id: "Two photos in this batch share an external_id. Give each photo its own external_id and submit again; nothing was charged.",
   already_indexed: "This photo_id is already indexed. Use override=true to replace its faces, or a different photo_id.",
   index_in_progress: "This photo is being indexed right now. Retry in a couple of seconds.",
   duplicate_request_already_processed:

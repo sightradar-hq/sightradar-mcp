@@ -241,6 +241,34 @@ describe("errors", () => {
     expect(body.hint).toMatch(/Too many requests at once/);
   });
 
+  it("explains a batch refused for a repeated external_id", async () => {
+    const { client } = await connect(() =>
+      json(
+        {
+          error: "duplicate external_id in batch: each photo needs its own external_id",
+          code: "duplicate_external_id",
+          photo_index: 2,
+          first_photo_index: 0,
+        },
+        400,
+      ),
+    );
+    const r = await client.callTool({
+      name: "submit_batch",
+      arguments: {
+        collection_id: "c",
+        op: "index",
+        photos: [
+          { url: "https://x.test/a.jpg", external_id: "same" },
+          { url: "https://x.test/b.jpg", external_id: "same" },
+        ],
+      },
+    });
+    const body = JSON.parse(textOf(r));
+    expect(body.code).toBe("duplicate_external_id");
+    expect(body.hint).toMatch(/its own external_id/);
+  });
+
   it("explains a settled idempotent replay", async () => {
     const { client } = await connect(() =>
       json({ error: "duplicate request already processed", error_code: "duplicate_request_already_processed" }, 409),
