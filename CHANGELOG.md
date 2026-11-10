@@ -8,7 +8,8 @@
 - A doubled `X-Request-Id` (`a,a`) is reported once.
 - `index_photo` and `submit_batch` say a photo_id must be unique across collections (some older accounts share photo ids between collections).
 - Release workflow: npm publishing uses trusted publishing (OIDC) with an `NPM_TOKEN` fallback, and skips a version that is already on npm, so pushing a tag for the MCP Registry no longer fails the Publish job.
-- Descriptions: `submit_batch` says `op=match` results reach only a webhook today; `delete_photo` says unknown ids still answer `deleted=true`; the limits text no longer promises a fixed in-flight number.
+- Descriptions: `submit_batch` says `op=match` results reach only a webhook today; `delete_photo` says unknown ids still answer `deleted=true`.
+- Pricing and limits: at most 10 billable requests in flight per account (the next one gets HTTP 429 `concurrency_limit_exceeded`, uncharged); a `search_by_point_id` answered `point_not_found` is not charged; a batch that repeats an `external_id` is refused with HTTP 400 `duplicate_external_id` before any charge, and the tool result explains it.
 
 ## 0.1.0
 
