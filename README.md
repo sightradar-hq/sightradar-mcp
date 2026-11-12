@@ -42,6 +42,8 @@ Add `https://mcp.sightradar.com/mcp` as a custom connector. On first use your br
   { "mcpServers": { "sightradar": { "url": "https://mcp.sightradar.com/mcp" } } }
   ```
 
+- **Kiro**: [Add to Kiro](https://kiro.dev/launch/mcp/add?name=sightradar&config=%7B%22url%22%3A%22https%3A%2F%2Fmcp.sightradar.com%2Fmcp%22%2C%22disabled%22%3Afalse%2C%22autoApprove%22%3A%5B%5D%7D) (one click), or add the same `url` to your Kiro MCP config.
+
 Prefer an API key? Send it as a header instead of signing in:
 
 ```json
@@ -199,6 +201,11 @@ SIGHTRADAR_API_KEY=frs_... node scripts/smoke.mjs   # free live calls over stdio
 ```
 
 `createSightRadarServer({ api, scopes })` and `TOOLS` are exported for embedding the same tools in another host.
+
+## Privacy and support
+
+- Privacy policy: [sightradar.com/privacy](https://sightradar.com/privacy). The MCP server sends the images and requests you give it to the SightRadar API under that policy; the local server reads only image files inside `SIGHTRADAR_FILE_ROOTS`.
+- Support: [support@sightradar.com](mailto:support@sightradar.com), or open an [issue](https://github.com/sightradar-hq/sightradar-mcp/issues). Security reports: see [SECURITY.md](SECURITY.md).
 
 ## Links
 
